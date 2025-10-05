@@ -1,5 +1,6 @@
 from fastmcp import FastMCP
 from datetime import datetime
+from bs4 import BeautifulSoup
 import requests
 import os
 import random
@@ -138,6 +139,31 @@ def _fetch_web_search(query: str, num_results: int = 20):
 @mcp.tool
 def web_search(query: str, num_results: int = 20) -> list:
     return _fetch_web_search(query, num_results)
+
+@mcp.tool
+def scrape_url(url: str, max_chars: int = 4000) -> str:
+    """
+    Fetches the web page at the given URL and extracts readable text (up to max_chars).
+    """
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; MCPBot/1.0)"
+        }
+        response = requests.get(url, headers=headers, timeout=8)
+        response.raise_for_status()
+    except Exception as e:
+        return f"Failed to fetch URL: {e}"
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Remove unnecessary tags:
+    for tag in soup(["script", "style", "noscript", "header", "footer", "form", "nav", "svg"]):
+        tag.decompose()
+    # Get visible text
+    text = soup.get_text(separator='\n', strip=True)
+    # Normalize whitespace and truncate if needed
+    clean_text = ' '.join(text.split())
+    return clean_text[:max_chars] + ('...' if len(clean_text) > max_chars else '')
 
 if __name__ == "__main__":
     mcp.run(transport="http", host="0.0.0.0", port=8080)

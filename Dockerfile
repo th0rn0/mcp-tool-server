@@ -8,7 +8,7 @@ WORKDIR /app
 COPY server.py .
 
 # Install the required Python packages
-RUN pip install --no-cache-dir fastmcp
+RUN pip install --no-cache-dir fastmcp beautifulsoup4
 
 # Expose port 8080
 EXPOSE 8080
